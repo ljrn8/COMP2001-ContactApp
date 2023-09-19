@@ -9,6 +9,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 
 public class ContactListFragment extends Fragment {
     @Override
@@ -16,16 +17,30 @@ public class ContactListFragment extends Fragment {
         super.onCreate(savedInstanceState);
     }
 
+    public ContactDOA dao;
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.fragment_contact_list, container, false);
 
+        MainActivity activity = (MainActivity) requireActivity();
+
+        /*ContactDOA dao = ContactDataBase
+                .getDataBase(activity.getApplicationContext())
+                .contactDOA();
+        */
+
         RecyclerView rv = view.findViewById(R.id.rv);
         rv.setLayoutManager(new LinearLayoutManager(requireContext()));
-        ContactListAdapter adapter = new ContactListAdapter();
+        ContactListAdapter adapter = new ContactListAdapter(activity, dao);
         rv.setAdapter(adapter);
+
+
+        Button addContact = view.findViewById(R.id.addContact);
+        addContact.setOnClickListener(v -> ((MainActivity) requireActivity()).loadFragment(
+                new EditContactFragment(), R.id.contact_list)
+        );
 
         return view;
     }

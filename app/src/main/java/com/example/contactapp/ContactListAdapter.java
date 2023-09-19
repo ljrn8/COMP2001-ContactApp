@@ -1,13 +1,28 @@
 package com.example.contactapp;
 
+import android.app.Activity;
+import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
+import java.util.List;
+
 public class ContactListAdapter extends RecyclerView.Adapter<ContactVH> {
+
+    private MainActivity activity;
+    private ContactDOA dao;
+
+
+    public ContactListAdapter(MainActivity activity, ContactDOA dao) {
+        this.activity = activity;
+        this.dao = dao;
+    }
 
     @NonNull
     @Override
@@ -18,34 +33,45 @@ public class ContactListAdapter extends RecyclerView.Adapter<ContactVH> {
     }
 
 
-    // TODO
-    public Contact contacts[] = {
-            new Contact("John", "287542387", "kys@gmail.com"),
-            new Contact("No", "287542387", "kys@gmail.com"),
-            new Contact("Jim", "287542387", "kys@gmail.com"),
-            new Contact("John", "287542387", "kys@gmail.com"),
-            new Contact("No", "287542387", "kys@gmail.com"),
-            new Contact("Jim", "287542387", "kys@gmail.com"),
-            new Contact("John", "287542387", "kys@gmail.com"),
-            new Contact("No", "287542387", "kys@gmail.com"),
-            new Contact("Jim", "287542387", "kys@gmail.com"),
-            new Contact("John", "287542387", "kys@gmail.com"),
-            new Contact("No", "287542387", "kys@gmail.com"),
-            new Contact("Jim", "287542387", "kys@gmail.com"),
-            new Contact("Ethan", "287542387", "kys@gmail.com")
-    };
-
+    private List<Contact> contacts;
     @Override
     public void onBindViewHolder(@NonNull ContactVH holder, int position) {
-        Contact contact = contacts[position];
 
-        holder.email.setText(contact.email);
-        holder.name.setText(contact.name);
-        holder.phone.setText(contact.phone);
+
+        contacts = dao.getAllContacts();
+
+        Contact contact = contacts.get(position); // TODO get adapter pos
+
+        holder.email.setText(contact.getEmail());
+        holder.name.setText(contact.getName());
+        holder.phone.setText(contact.getPhone());
+
+        holder.itemView.setOnClickListener(v -> {
+
+            if (activity != null) {
+                Log.i("contacts", "pressed on user " + position);
+
+                Bundle bundle = new Bundle();
+                bundle.putString("name", holder.name.getText().toString());
+                bundle.putString("email", holder.email.getText().toString());
+                bundle.putString("phone", holder.phone.getText().toString());
+                bundle.putInt("position", position);
+
+                EditContactFragment editContactFragment = new EditContactFragment();
+                editContactFragment.setArguments(bundle);
+
+                activity.loadFragment(editContactFragment, R.id.contact_list); // smaller ??
+            }
+        });
     }
 
     @Override
     public int getItemCount() {
-        return contacts.length;
+        int size = 0;
+        if (contacts != null) {
+            size = contacts.size();
+        }
+        return size;
     }
+
 }
