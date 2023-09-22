@@ -2,6 +2,7 @@ package com.example.contactapp;
 
 import static android.app.Activity.RESULT_OK;
 
+import android.content.Context;
 import android.content.Intent;
 import android.content.res.Configuration;
 import android.graphics.Bitmap;
@@ -45,12 +46,13 @@ public class EditContactFragment extends Fragment {
     }
 
     private EditText nameEdit, phoneEdit, emailEdit;
+
     private TextView title, error;
     private Button save, photo;
     private ImageView capture;
     private List<Contact> contacts;
 
-    @Override
+    /*@Override
     public void onConfigurationChanged(Configuration newConfig) {
         super.onConfigurationChanged(newConfig);
 
@@ -73,6 +75,15 @@ public class EditContactFragment extends Fragment {
             replaceFragmentView(view);
         }
 
+    }*/
+
+    /*public void onConfigurationChanged(Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
+        if (newConfig.orientation == Configuration.ORIENTATION_LANDSCAPE) {
+            setViewLayout(R.layout.fragment_edit_contact_landscape);
+        } else if (newConfig.orientation == Configuration.ORIENTATION_PORTRAIT) {
+            setViewLayout(R.layout.fragment_edit_contact);
+        }
     }
 
     void replaceFragmentView(View newView) {
@@ -82,19 +93,41 @@ public class EditContactFragment extends Fragment {
         parentView.addView(newView, index);
     }
 
+    public View view;
+    private void setViewLayout(int id) {
+        LayoutInflater inflater = (LayoutInflater) getActivity().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+        view = inflater.inflate(id, null);
+        ViewGroup rootView = (ViewGroup) getView();
+        rootView.removeAllViews();
+        rootView.addView(view);
+    }*/
+
+    private Bitmap image;
+
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
+        outState.putString("name", nameEdit.getText().toString());
+        outState.putString("phone", phoneEdit.getText().toString());
+        outState.putString("email", emailEdit.getText().toString());
+
+        super.onSaveInstanceState(outState);
+    }
+
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         // View view =  inflater.inflate(R.layout.fragment_edit_contact, container, false);
-
         View view;
         int orientation = getResources().getConfiguration().orientation;
-        if (orientation == Configuration.ORIENTATION_PORTRAIT) {
+        view = inflater.inflate(R.layout.fragment_edit_contact, container, false);
+
+
+        /*if (orientation == Configuration.ORIENTATION_PORTRAIT) {
             view = inflater.inflate(R.layout.fragment_edit_contact, container, false);
         } else {
             view = inflater.inflate(R.layout.fragment_edit_contact_landscape, container, false);
-        }
+        }*/
 
         ContactDOA dao = ((MainActivity) requireActivity()).getDao();
         List<Contact> contacts = dao.getAllContacts();
@@ -110,14 +143,20 @@ public class EditContactFragment extends Fragment {
         emailEdit = view.findViewById(R.id.enter_email);
         save = view.findViewById(R.id.save);
 
+        if (savedInstanceState != null) {
+            nameEdit.setText(savedInstanceState.getString("name"));
+            emailEdit.setText(savedInstanceState.getString("email"));
+            phoneEdit.setText(savedInstanceState.getString("email"));
+        }
 
         // update contact
         if (!createContact) {
-            title.setText(name);
-            nameEdit.setText(name);
-            phoneEdit.setText(phone);
-            emailEdit.setText(email);
-
+            if (savedInstanceState == null) {
+                title.setText(name);
+                nameEdit.setText(name);
+                phoneEdit.setText(phone);
+                emailEdit.setText(email);
+            }
             save.setOnClickListener(v -> {
                 if (validateInput(contacts)) {
 
@@ -155,7 +194,7 @@ public class EditContactFragment extends Fragment {
             result -> {
                 if (result.getResultCode() == RESULT_OK) {
                     Intent data = result.getData();
-                    Bitmap image = (Bitmap) data.getExtras().get("data");
+                    image = (Bitmap) data.getExtras().get("data");
                     if (image != null) {
                         capture.setImageBitmap(image);
                     }
@@ -183,7 +222,7 @@ public class EditContactFragment extends Fragment {
 
         String inputs[] = { inName, inPhone, inEmail };
         for (String input: inputs) {
-            if (input.equals("") || input.equals(null)) {
+            if (input == null || input.equals("")) {
                 error.setText("cannot have empty input");
                 error.setVisibility(View.VISIBLE);
                 return false;
