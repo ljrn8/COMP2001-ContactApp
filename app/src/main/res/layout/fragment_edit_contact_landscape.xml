@@ -15,12 +15,25 @@
         android:layout_marginTop="20dp"
         android:textSize="30dp"/>
 
+    <de.hdodenhof.circleimageview.CircleImageView
+        android:id="@+id/capture"
+        android:layout_width="150dp"
+        android:layout_height="150dp"
+        android:layout_alignParentRight="true"
+        android:layout_centerVertical   ="true"
+        android:layout_marginRight="30dp"
+        android:layout_marginLeft="30dp"/>
+
     <LinearLayout
-        android:layout_width="match_parent"
+        android:layout_width="300dp"
         android:layout_height="match_parent"
         android:orientation="vertical"
         android:layout_below="@id/title"
-        android:padding="60dp">
+        android:layout_marginLeft="30dp"
+        android:layout_alignParentLeft="true"
+        android:padding="10dp"
+        android:gravity="center"
+        android:layout_toLeftOf="@id/capture">
 
         <EditText
             android:id="@+id/enter_name"
@@ -55,16 +68,9 @@
             android:gravity="center"/>
 
 
-        <de.hdodenhof.circleimageview.CircleImageView
-            android:id="@+id/capture"
-            android:layout_width="150dp"
-            android:layout_height="150dp"
-            android:layout_marginVertical="30dp"
-            android:layout_gravity="center"/>
-
         <RelativeLayout
             android:layout_width="match_parent"
-            android:layout_height="match_parent">
+            android:layout_height="wrap_content">
 
             <Button
                 android:id="@+id/save"

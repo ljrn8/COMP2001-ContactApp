@@ -21,7 +21,7 @@ public interface ContactDOA {
     @Insert
     void insertMultiple(List<Contact> contacts);
 
-    @Update
+    @Update(entity = Contact.class)
     void update(Contact contact);
 
     @Delete
@@ -30,7 +30,12 @@ public interface ContactDOA {
     @Query("SELECT * FROM contacts")
     List<Contact> getAllContacts();
 
-
     @Query("SELECT * FROM contacts WHERE name= :inName")
     Contact getByName(String inName);
+
+    @Query("UPDATE contacts SET name= :newName WHERE name= :oldName")
+    void updateName(String oldName, String newName);
+
+    @Query("DELETE FROM contacts")
+    void deleteAll();
 }

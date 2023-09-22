@@ -21,15 +21,19 @@ public class MainActivity extends AppCompatActivity {
                 .getDataBase(getApplicationContext())
                 .contactDOA();
 
-        // default users - change later
-        dao.insert(new Contact("john", "64373468", "kys@gmail.com"));
-        dao.insert(new Contact("john2", "64373468", "kys@gmail.com"));
-        dao.insert(new Contact("jim", "64363468", "kys@gmail.com"));
-        dao.insert(new Contact("no", "64363468", "kys@gmail.com"));
+        // restartDB();
 
         loadFragment(contactListFragment, R.id.contact_list);
     }
 
+    // default users - change later
+    private void restartDB() {
+        dao.deleteAll();
+        dao.insert(new Contact("john", "64373468", "kys@gmail.com"));
+        dao.insert(new Contact("john2", "64373468", "kys@gmail.com"));
+        dao.insert(new Contact("jim", "64363468", "kys@gmail.com"));
+        dao.insert(new Contact("no", "64363468", "kys@gmail.com"));
+    }
 
     public void loadFragment(Fragment frag, int container){
         FragmentManager fm = getSupportFragmentManager();

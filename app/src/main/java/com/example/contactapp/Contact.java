@@ -2,6 +2,7 @@ package com.example.contactapp;
 
 
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 
 import androidx.annotation.NonNull;
 import androidx.core.app.NotificationCompat;
@@ -12,22 +13,40 @@ import androidx.room.PrimaryKey;
 
 import org.jetbrains.annotations.NotNull;
 
-@Entity(tableName = "contacts")
+import java.io.ByteArrayOutputStream;
+
+@Entity(tableName = "Contacts")
 public class Contact {
 
+    @PrimaryKey(autoGenerate = true)
+    private long id;
 
-    @PrimaryKey
-    @NotNull
+    @ColumnInfo(name = "name")
     private String name = "john"; // TODO
 
-    @ColumnInfo(name = "phone_number")
+    @ColumnInfo(name = "number")
     private String phone;
 
-    @ColumnInfo(name = "contact_email")
+    @ColumnInfo(name = "email")
     private String email;
 
-    @Ignore
-    Bitmap picture;
+    @ColumnInfo(name = "picture")
+    byte[] picture;
+
+    // Byte array to bitmap conversion from
+    // https://stackoverflow.com/questions/4989182/converting-java-bitmap-to-byte-array
+    public Bitmap getPicture() {
+        return BitmapFactory.decodeByteArray(picture, 0, picture.length);
+    }
+    public void setPicture(Bitmap picture) {
+        if (picture == null) {
+            this.picture = null;
+        } else {
+            ByteArrayOutputStream stream = new ByteArrayOutputStream();
+            picture.compress(Bitmap.CompressFormat.PNG, 100, stream);
+            this.picture = stream.toByteArray();
+        }
+    }
 
     public Contact(@NotNull String name, String phone, String email) {
         this.name = name;
@@ -35,8 +54,15 @@ public class Contact {
         this.email = email;
     }
 
+    public long getId() {
+        return id;
+    }
 
-    @NonNull
+    public void setId(long id) {
+        this.id = id;
+    }
+
+
     public String getName() {
         return name;
     }
@@ -61,10 +87,11 @@ public class Contact {
         this.email = email;
     }
 
-    @Override
+    @NonNull @Override
     public String toString() {
         return "Contact{" +
-                "name='" + name + '\'' +
+                "id=" + id +
+                ", name='" + name + '\'' +
                 ", phone='" + phone + '\'' +
                 ", email='" + email + '\'' +
                 ", picture=" + picture +

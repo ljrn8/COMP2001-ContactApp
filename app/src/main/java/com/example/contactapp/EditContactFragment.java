@@ -1,18 +1,29 @@
 package com.example.contactapp;
 
+import static android.app.Activity.RESULT_OK;
+
+import android.content.Intent;
+import android.content.res.Configuration;
+import android.graphics.Bitmap;
 import android.os.Bundle;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.fragment.app.Fragment;
 
+import android.provider.MediaStore;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ActionMenuView;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import java.util.List;
+import java.util.Objects;
 
 public class EditContactFragment extends Fragment {
 
@@ -35,14 +46,55 @@ public class EditContactFragment extends Fragment {
 
     private EditText nameEdit, phoneEdit, emailEdit;
     private TextView title, error;
-    private Button save;
+    private Button save, photo;
+    private ImageView capture;
     private List<Contact> contacts;
+
+    @Override
+    public void onConfigurationChanged(Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
+
+        if (newConfig.orientation == Configuration.ORIENTATION_LANDSCAPE) {
+            View view = getView();
+            assert view != null;
+            view = LayoutInflater.from(getContext()).inflate(
+                    R.layout.fragment_edit_contact_landscape,
+                    (ViewGroup) view.getParent()
+            );
+            replaceFragmentView(view);
+
+        } else if (newConfig.orientation == Configuration.ORIENTATION_PORTRAIT) {
+            View view = getView();
+            assert view != null;
+            view = LayoutInflater.from(getContext()).inflate(
+                    R.layout.fragment_edit_contact,
+                    (ViewGroup) view.getParent()
+            );
+            replaceFragmentView(view);
+        }
+
+    }
+
+    void replaceFragmentView(View newView) {
+        ViewGroup parentView = (ViewGroup) requireView().getParent();
+        int index = parentView.indexOfChild(getView());
+        parentView.removeView(getView());
+        parentView.addView(newView, index);
+    }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        View view =  inflater.inflate(R.layout.fragment_edit_contact, container, false);
+        // View view =  inflater.inflate(R.layout.fragment_edit_contact, container, false);
+
+        View view;
+        int orientation = getResources().getConfiguration().orientation;
+        if (orientation == Configuration.ORIENTATION_PORTRAIT) {
+            view = inflater.inflate(R.layout.fragment_edit_contact, container, false);
+        } else {
+            view = inflater.inflate(R.layout.fragment_edit_contact_landscape, container, false);
+        }
 
         ContactDOA dao = ((MainActivity) requireActivity()).getDao();
         List<Contact> contacts = dao.getAllContacts();
@@ -68,18 +120,12 @@ public class EditContactFragment extends Fragment {
 
             save.setOnClickListener(v -> {
                 if (validateInput(contacts)) {
-                    Contact current = dao.getByName(name);
+
+                    Contact current = dao.getByName(name); // same id
                     current.setName(nameEdit.getText().toString());
                     current.setEmail(emailEdit.getText().toString());
                     current.setPhone(phoneEdit.getText().toString());
-
-                    dao.update(current); // TODO ????
-
-                    /*Log.i("kys", "==============" + current.toString() + "================");
-                    for (Contact contact: contacts) {
-                        Log.i("kys", contact.toString());
-                    }*/
-
+                    dao.update(current);
 
                     ((MainActivity) requireActivity()).loadFragment(new ContactListFragment(), R.id.contact_list);
                 }
@@ -100,6 +146,32 @@ public class EditContactFragment extends Fragment {
                 }
             });
         }
+
+
+        // image capture display (lecture slides)
+        capture = view.findViewById(R.id.capture);
+        ActivityResultLauncher<Intent> photoLauncher = registerForActivityResult(
+            new ActivityResultContracts.StartActivityForResult(),
+            result -> {
+                if (result.getResultCode() == RESULT_OK) {
+                    Intent data = result.getData();
+                    Bitmap image = (Bitmap) data.getExtras().get("data");
+                    if (image != null) {
+                        capture.setImageBitmap(image);
+                    }
+                }
+            }
+        );
+
+        // image capture button
+        photo = view.findViewById(R.id.get_picture);
+        photo.setOnClickListener(v -> {
+            Intent intent = new Intent();
+            intent.setAction(MediaStore.ACTION_IMAGE_CAPTURE);
+            photoLauncher.launch(intent);
+        });
+
+
         return view;
     }
 
