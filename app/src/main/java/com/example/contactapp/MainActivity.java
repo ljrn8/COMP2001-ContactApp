@@ -5,16 +5,19 @@ import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 
 import android.os.Bundle;
+import android.util.Log;
 
 public class MainActivity extends AppCompatActivity {
     ContactListFragment contactListFragment = new ContactListFragment();
+
+    private ContactDOA dao = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        ContactDOA dao = ContactDataBase
+        dao = ContactDataBase
                 .getDataBase(getApplicationContext())
                 .contactDOA();
 
@@ -23,8 +26,6 @@ public class MainActivity extends AppCompatActivity {
         dao.insert(new Contact("john2", "64373468", "kys@gmail.com"));
         dao.insert(new Contact("jim", "64363468", "kys@gmail.com"));
         dao.insert(new Contact("no", "64363468", "kys@gmail.com"));
-
-        contactListFragment.dao = dao;
 
         loadFragment(contactListFragment, R.id.contact_list);
     }
@@ -39,5 +40,7 @@ public class MainActivity extends AppCompatActivity {
             fm.beginTransaction().replace(container,frag).commit();
         }
     }
+
+    public ContactDOA getDao() { return dao; }
 
 }

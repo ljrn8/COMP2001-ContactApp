@@ -16,8 +16,7 @@ public class ContactListFragment extends Fragment {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
     }
-
-    public ContactDOA dao;
+    public ContactListAdapter adapter;
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
@@ -33,7 +32,7 @@ public class ContactListFragment extends Fragment {
 
         RecyclerView rv = view.findViewById(R.id.rv);
         rv.setLayoutManager(new LinearLayoutManager(requireContext()));
-        ContactListAdapter adapter = new ContactListAdapter(activity, dao);
+        adapter = new ContactListAdapter(activity);
         rv.setAdapter(adapter);
 
 

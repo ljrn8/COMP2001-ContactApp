@@ -16,12 +16,9 @@ import java.util.List;
 public class ContactListAdapter extends RecyclerView.Adapter<ContactVH> {
 
     private MainActivity activity;
-    private ContactDOA dao;
 
-
-    public ContactListAdapter(MainActivity activity, ContactDOA dao) {
+    public ContactListAdapter(MainActivity activity) {
         this.activity = activity;
-        this.dao = dao;
     }
 
     @NonNull
@@ -33,14 +30,13 @@ public class ContactListAdapter extends RecyclerView.Adapter<ContactVH> {
     }
 
 
-    private List<Contact> contacts;
     @Override
     public void onBindViewHolder(@NonNull ContactVH holder, int position) {
 
-
-        contacts = dao.getAllContacts();
+        List<Contact> contacts = activity.getDao().getAllContacts();
 
         Contact contact = contacts.get(position); // TODO get adapter pos
+
 
         holder.email.setText(contact.getEmail());
         holder.name.setText(contact.getName());
@@ -68,8 +64,8 @@ public class ContactListAdapter extends RecyclerView.Adapter<ContactVH> {
     @Override
     public int getItemCount() {
         int size = 0;
-        if (contacts != null) {
-            size = contacts.size();
+        if (activity.getDao().getAllContacts() != null) {
+            size = activity.getDao().getAllContacts().size();
         }
         return size;
     }
