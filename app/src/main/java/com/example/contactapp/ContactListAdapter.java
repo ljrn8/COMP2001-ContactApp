@@ -42,6 +42,10 @@ public class ContactListAdapter extends RecyclerView.Adapter<ContactVH> {
         holder.name.setText(contact.getName());
         holder.phone.setText(contact.getPhone());
 
+
+        if (contact.getPicture() != null) holder.pfp.setImageBitmap(contact.getPicture());
+        else { holder.pfp.setImageResource(R.drawable.resource_default); }
+
         holder.itemView.setOnClickListener(v -> {
 
             if (activity != null) {
@@ -52,6 +56,7 @@ public class ContactListAdapter extends RecyclerView.Adapter<ContactVH> {
                 bundle.putString("email", holder.email.getText().toString());
                 bundle.putString("phone", holder.phone.getText().toString());
                 bundle.putInt("position", position);
+                bundle.putLong("id", contact.getId());
 
                 EditContactFragment editContactFragment = new EditContactFragment();
                 editContactFragment.setArguments(bundle);

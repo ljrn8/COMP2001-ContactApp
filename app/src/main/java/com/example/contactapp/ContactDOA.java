@@ -27,11 +27,11 @@ public interface ContactDOA {
     @Delete
     void delete(Contact contact);
 
+    @Query("SELECT * FROM contacts WHERE id= :id")
+    Contact getById(long id);
+
     @Query("SELECT * FROM contacts")
     List<Contact> getAllContacts();
-
-    @Query("SELECT * FROM contacts WHERE name= :inName")
-    Contact getByName(String inName);
 
     @Query("UPDATE contacts SET name= :newName WHERE name= :oldName")
     void updateName(String oldName, String newName);

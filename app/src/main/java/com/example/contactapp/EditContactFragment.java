@@ -32,16 +32,19 @@ public class EditContactFragment extends Fragment {
     private String name, email, phone;
     private int position;
     private boolean createContact;
+    private long id;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        Log.i("kys", "reran onCreate");
         Bundle arguments = getArguments();
         if (arguments != null) {
             name = arguments.getString("name");
             email = arguments.getString("email");
             phone = arguments.getString("phone");
             position = arguments.getInt("position");
+            id = arguments.getLong("id");
         }
     }
 
@@ -51,56 +54,6 @@ public class EditContactFragment extends Fragment {
     private Button save, photo;
     private ImageView capture;
     private List<Contact> contacts;
-
-    /*@Override
-    public void onConfigurationChanged(Configuration newConfig) {
-        super.onConfigurationChanged(newConfig);
-
-        if (newConfig.orientation == Configuration.ORIENTATION_LANDSCAPE) {
-            View view = getView();
-            assert view != null;
-            view = LayoutInflater.from(getContext()).inflate(
-                    R.layout.fragment_edit_contact_landscape,
-                    (ViewGroup) view.getParent()
-            );
-            replaceFragmentView(view);
-
-        } else if (newConfig.orientation == Configuration.ORIENTATION_PORTRAIT) {
-            View view = getView();
-            assert view != null;
-            view = LayoutInflater.from(getContext()).inflate(
-                    R.layout.fragment_edit_contact,
-                    (ViewGroup) view.getParent()
-            );
-            replaceFragmentView(view);
-        }
-
-    }*/
-
-    /*public void onConfigurationChanged(Configuration newConfig) {
-        super.onConfigurationChanged(newConfig);
-        if (newConfig.orientation == Configuration.ORIENTATION_LANDSCAPE) {
-            setViewLayout(R.layout.fragment_edit_contact_landscape);
-        } else if (newConfig.orientation == Configuration.ORIENTATION_PORTRAIT) {
-            setViewLayout(R.layout.fragment_edit_contact);
-        }
-    }
-
-    void replaceFragmentView(View newView) {
-        ViewGroup parentView = (ViewGroup) requireView().getParent();
-        int index = parentView.indexOfChild(getView());
-        parentView.removeView(getView());
-        parentView.addView(newView, index);
-    }
-
-    public View view;
-    private void setViewLayout(int id) {
-        LayoutInflater inflater = (LayoutInflater) getActivity().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-        view = inflater.inflate(id, null);
-        ViewGroup rootView = (ViewGroup) getView();
-        rootView.removeAllViews();
-        rootView.addView(view);
-    }*/
 
     private Bitmap image;
 
@@ -118,16 +71,12 @@ public class EditContactFragment extends Fragment {
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         // View view =  inflater.inflate(R.layout.fragment_edit_contact, container, false);
+        Log.i("kys", "reran onCreateView");
+
+
         View view;
-        int orientation = getResources().getConfiguration().orientation;
+        // int orientation = getResources().getConfiguration().orientation;
         view = inflater.inflate(R.layout.fragment_edit_contact, container, false);
-
-
-        /*if (orientation == Configuration.ORIENTATION_PORTRAIT) {
-            view = inflater.inflate(R.layout.fragment_edit_contact, container, false);
-        } else {
-            view = inflater.inflate(R.layout.fragment_edit_contact_landscape, container, false);
-        }*/
 
         ContactDOA dao = ((MainActivity) requireActivity()).getDao();
         List<Contact> contacts = dao.getAllContacts();
@@ -143,27 +92,28 @@ public class EditContactFragment extends Fragment {
         emailEdit = view.findViewById(R.id.enter_email);
         save = view.findViewById(R.id.save);
 
-        if (savedInstanceState != null) {
-            nameEdit.setText(savedInstanceState.getString("name"));
-            emailEdit.setText(savedInstanceState.getString("email"));
-            phoneEdit.setText(savedInstanceState.getString("email"));
-        }
+        capture = view.findViewById(R.id.capture);
+
+        if (image != null) capture.setImageBitmap(image);
+        else { capture.setImageResource(R.drawable.resource_default); }
 
         // update contact
         if (!createContact) {
-            if (savedInstanceState == null) {
-                title.setText(name);
-                nameEdit.setText(name);
-                phoneEdit.setText(phone);
-                emailEdit.setText(email);
-            }
+            Contact contact = dao.getById(id);
+            title.setText(contact.getName());
+            phoneEdit.setText(contact.getPhone());
+            emailEdit.setText(contact.getEmail());
+            nameEdit.setText(contact.getName());
+            capture.setImageBitmap(contact.getPicture());
+
             save.setOnClickListener(v -> {
                 if (validateInput(contacts)) {
 
-                    Contact current = dao.getByName(name); // same id
+                    Contact current = dao.getById(id);
                     current.setName(nameEdit.getText().toString());
                     current.setEmail(emailEdit.getText().toString());
                     current.setPhone(phoneEdit.getText().toString());
+                    current.setPicture(image);
                     dao.update(current);
 
                     ((MainActivity) requireActivity()).loadFragment(new ContactListFragment(), R.id.contact_list);
@@ -180,6 +130,7 @@ public class EditContactFragment extends Fragment {
                             phoneEdit.getText().toString(),
                             emailEdit.getText().toString()
                     );
+                    contact.setPicture(image);
                     dao.insert(contact);
                     ((MainActivity) requireActivity()).loadFragment(new ContactListFragment(), R.id.contact_list);
                 }
@@ -188,7 +139,6 @@ public class EditContactFragment extends Fragment {
 
 
         // image capture display (lecture slides)
-        capture = view.findViewById(R.id.capture);
         ActivityResultLauncher<Intent> photoLauncher = registerForActivityResult(
             new ActivityResultContracts.StartActivityForResult(),
             result -> {

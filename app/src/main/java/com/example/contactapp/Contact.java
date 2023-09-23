@@ -36,6 +36,7 @@ public class Contact {
     // Byte array to bitmap conversion from
     // https://stackoverflow.com/questions/4989182/converting-java-bitmap-to-byte-array
     public Bitmap getPicture() {
+        if (picture == null) return null;
         return BitmapFactory.decodeByteArray(picture, 0, picture.length);
     }
     public void setPicture(Bitmap picture) {
