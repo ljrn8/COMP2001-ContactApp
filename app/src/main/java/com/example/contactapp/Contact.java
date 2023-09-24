@@ -1,8 +1,10 @@
 package com.example.contactapp;
 
 
+import android.annotation.SuppressLint;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.widget.ImageView;
 
 import androidx.annotation.NonNull;
 import androidx.core.app.NotificationCompat;
@@ -46,6 +48,14 @@ public class Contact {
             ByteArrayOutputStream stream = new ByteArrayOutputStream();
             picture.compress(Bitmap.CompressFormat.PNG, 100, stream);
             this.picture = stream.toByteArray();
+        }
+    }
+
+    public void loadPicture(ImageView view) {
+        if (getPicture() != null) {
+            view.setImageBitmap(getPicture());
+        } else {
+            view.setImageResource(R.drawable.ic_launcher_foreground);
         }
     }
 

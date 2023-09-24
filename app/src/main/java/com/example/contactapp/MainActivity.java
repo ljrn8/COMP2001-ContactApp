@@ -25,7 +25,6 @@ public class MainActivity extends AppCompatActivity {
 
         loadFragment(contactListFragment, R.id.contact_list);
     }
-
     // default users - change later
     private void restartDB() {
         dao.deleteAll();

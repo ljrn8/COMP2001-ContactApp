@@ -2,9 +2,7 @@ package com.example.contactapp;
 
 import static android.app.Activity.RESULT_OK;
 
-import android.content.Context;
 import android.content.Intent;
-import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.os.Bundle;
 
@@ -17,14 +15,12 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ActionMenuView;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
 
 import java.util.List;
-import java.util.Objects;
 
 public class EditContactFragment extends Fragment {
 
@@ -94,8 +90,7 @@ public class EditContactFragment extends Fragment {
 
         capture = view.findViewById(R.id.capture);
 
-        if (image != null) capture.setImageBitmap(image);
-        else { capture.setImageResource(R.drawable.resource_default); }
+
 
         // update contact
         if (!createContact) {
@@ -106,9 +101,13 @@ public class EditContactFragment extends Fragment {
             nameEdit.setText(contact.getName());
             capture.setImageBitmap(contact.getPicture());
 
+            // get the pfp
+            image = contact.getPicture();
+            if (image != null) capture.setImageBitmap(image);
+            else { capture.setImageResource(R.drawable.ic_launcher_foreground); }
+
             save.setOnClickListener(v -> {
                 if (validateInput(contacts)) {
-
                     Contact current = dao.getById(id);
                     current.setName(nameEdit.getText().toString());
                     current.setEmail(emailEdit.getText().toString());
@@ -123,6 +122,8 @@ public class EditContactFragment extends Fragment {
         // add a contact
         } else {
             title.setText("Create Contact");
+            capture.setImageResource(R.drawable.ic_launcher_foreground);
+
             save.setOnClickListener(v -> {
                 if (validateInput(contacts)) {
                     Contact contact = new Contact(

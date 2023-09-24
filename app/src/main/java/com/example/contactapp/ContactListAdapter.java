@@ -1,12 +1,11 @@
 package com.example.contactapp;
 
-import android.app.Activity;
+import android.content.res.Configuration;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
@@ -29,7 +28,6 @@ public class ContactListAdapter extends RecyclerView.Adapter<ContactVH> {
         return new ContactVH(view);
     }
 
-
     @Override
     public void onBindViewHolder(@NonNull ContactVH holder, int position) {
 
@@ -37,14 +35,21 @@ public class ContactListAdapter extends RecyclerView.Adapter<ContactVH> {
 
         Contact contact = contacts.get(position); // TODO get adapter pos
 
-
         holder.email.setText(contact.getEmail());
         holder.name.setText(contact.getName());
         holder.phone.setText(contact.getPhone());
 
+        Configuration configuration = activity.getResources().getConfiguration();
+        if ((configuration.uiMode & Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES) {
+            holder.delete.setImageResource(R.drawable.trash_light);
+        }
 
-        if (contact.getPicture() != null) holder.pfp.setImageBitmap(contact.getPicture());
-        else { holder.pfp.setImageResource(R.drawable.resource_default); }
+        holder.delete.setOnClickListener(v -> {
+            activity.getDao().delete(contact);
+            notifyItemRemoved(position);
+        });
+
+        contact.loadPicture(holder.pfp);
 
         holder.itemView.setOnClickListener(v -> {
 
