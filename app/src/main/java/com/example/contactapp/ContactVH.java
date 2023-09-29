@@ -1,5 +1,7 @@
 package com.example.contactapp;
 
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
@@ -20,5 +22,10 @@ public class ContactVH extends RecyclerView.ViewHolder {
         email = itemView.findViewById(R.id.email);
         pfp = itemView.findViewById(R.id.pfp);
         delete = itemView.findViewById(R.id.delete);
+
+        TextView[] fields = new TextView[] {
+                name, phone, email
+        };
+
     }
 }

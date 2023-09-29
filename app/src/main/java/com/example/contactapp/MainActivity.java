@@ -1,6 +1,7 @@
 package com.example.contactapp;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 
@@ -11,6 +12,8 @@ public class MainActivity extends AppCompatActivity {
     ContactListFragment contactListFragment = new ContactListFragment();
 
     private ContactDOA dao = null;
+
+    private static final int REQUEST_READ_CONTACT_PERMISSION = 3;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -24,7 +27,11 @@ public class MainActivity extends AppCompatActivity {
         // restartDB();
 
         loadFragment(contactListFragment, R.id.contact_list);
+
     }
+
+
+
     // default users - change later
     private void restartDB() {
         dao.deleteAll();

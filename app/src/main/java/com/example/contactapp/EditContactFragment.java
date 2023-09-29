@@ -8,17 +8,22 @@ import android.os.Bundle;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.appcompat.app.ActionBar;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
 import androidx.fragment.app.Fragment;
 
 import android.provider.MediaStore;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import java.util.List;
 
@@ -63,16 +68,24 @@ public class EditContactFragment extends Fragment {
     }
 
     @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        if (item.getItemId() == android.R.id.home) {
+            ((MainActivity) requireActivity()).loadFragment(new ContactListFragment(), R.id.contact_list);
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
+    }
+
+    @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         // View view =  inflater.inflate(R.layout.fragment_edit_contact, container, false);
-        Log.i("kys", "reran onCreateView");
-
 
         View view;
         // int orientation = getResources().getConfiguration().orientation;
         view = inflater.inflate(R.layout.fragment_edit_contact, container, false);
+        setHasOptionsMenu(true);
 
         ContactDOA dao = ((MainActivity) requireActivity()).getDao();
         List<Contact> contacts = dao.getAllContacts();
@@ -91,11 +104,21 @@ public class EditContactFragment extends Fragment {
         capture = view.findViewById(R.id.capture);
 
 
+        Toolbar toolbar = view.findViewById(R.id.toolbar);
+        MainActivity activity = (MainActivity) getActivity();
+        if (activity != null) {
+            activity.setSupportActionBar(toolbar);
+            ActionBar actionBar = activity.getSupportActionBar();
+            if (actionBar != null) {
+                actionBar.setDisplayHomeAsUpEnabled(true);
+            }
+        }
+
 
         // update contact
         if (!createContact) {
             Contact contact = dao.getById(id);
-            title.setText(contact.getName());
+            toolbar.setTitle(contact.getName());
             phoneEdit.setText(contact.getPhone());
             emailEdit.setText(contact.getEmail());
             nameEdit.setText(contact.getName());
@@ -121,9 +144,8 @@ public class EditContactFragment extends Fragment {
 
         // add a contact
         } else {
-            title.setText("Create Contact");
+            toolbar.setTitle("Create Contact");
             capture.setImageResource(R.drawable.ic_launcher_foreground);
-
             save.setOnClickListener(v -> {
                 if (validateInput(contacts)) {
                     Contact contact = new Contact(
@@ -137,7 +159,6 @@ public class EditContactFragment extends Fragment {
                 }
             });
         }
-
 
         // image capture display (lecture slides)
         ActivityResultLauncher<Intent> photoLauncher = registerForActivityResult(
@@ -161,30 +182,41 @@ public class EditContactFragment extends Fragment {
             photoLauncher.launch(intent);
         });
 
-
         return view;
     }
 
 
-    boolean validateInput(List<Contact> contacts) {
+    private boolean validateInput(List<Contact> contacts) {
         String inName = nameEdit.getText().toString();
         String inPhone = phoneEdit.getText().toString();
         String inEmail = emailEdit.getText().toString();
 
-        String inputs[] = { inName, inPhone, inEmail };
-        for (String input: inputs) {
+        String checkInputs[] = { inName, inPhone };
+        for (String input: checkInputs) {
             if (input == null || input.equals("")) {
-                error.setText("cannot have empty input");
-                error.setVisibility(View.VISIBLE);
+                Toast.makeText(requireContext(),
+                        "name and phone are required",
+                        Toast.LENGTH_LONG).show();
+                return false;
+            }
+            if (input.length() > 30) {
+                Toast.makeText(requireContext(),
+                        "keep name and phone number below 30 characters",
+                        Toast.LENGTH_LONG).show();
                 return false;
             }
         }
-
-
         for (Contact contact: contacts) {
             if (contact.getName().equals(inName) && !contact.getName().equals(name)) {
-                error.setText("name is taken");
-                error.setVisibility(View.VISIBLE);
+
+
+                Log.i("check", name);
+                Log.i("check", contact.getName());
+
+
+                Toast.makeText(requireContext(),
+                        "name '" + contact.getName() + "' is taken",
+                        Toast.LENGTH_LONG).show();
                 return false;
             }
         }
