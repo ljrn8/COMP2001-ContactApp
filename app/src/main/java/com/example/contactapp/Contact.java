@@ -55,7 +55,7 @@ public class Contact {
         if (getPicture() != null) {
             view.setImageBitmap(getPicture());
         } else {
-            view.setImageResource(R.drawable.ic_launcher_foreground);
+            view.setImageResource(R.drawable.baseline_person_24);
         }
     }
 

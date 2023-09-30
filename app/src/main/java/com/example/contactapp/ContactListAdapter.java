@@ -33,7 +33,7 @@ public class ContactListAdapter extends RecyclerView.Adapter<ContactVH> {
 
         List<Contact> contacts = activity.getDao().getAllContacts();
 
-        Contact contact = contacts.get(holder.getAdapterPosition()); // TODO get adapter pos
+        Contact contact = contacts.get(holder.getAdapterPosition());
 
         holder.email.setText(contact.getEmail());
         holder.name.setText(contact.getName());

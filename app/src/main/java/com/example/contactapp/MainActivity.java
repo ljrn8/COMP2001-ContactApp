@@ -1,11 +1,15 @@
 package com.example.contactapp;
 
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 
+import android.Manifest;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
@@ -18,18 +22,18 @@ public class MainActivity extends AppCompatActivity {
 
     private ContactDOA dao = null;
 
-    private static final int REQUEST_READ_CONTACT_PERMISSION = 3;
+    public static final int REQUEST_READ_CONTACT_PERMISSION = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+
         dao = ContactDataBase
                 .getDataBase(getApplicationContext())
                 .contactDOA();
 
-        // restartDB();
 
         loadFragment(contactListFragment, R.id.contact_list);
 
@@ -37,13 +41,11 @@ public class MainActivity extends AppCompatActivity {
 
 
 
-    // default users - change later
     private void restartDB() {
         dao.deleteAll();
-        dao.insert(new Contact("john", "64373468", "kys@gmail.com"));
-        dao.insert(new Contact("john2", "64373468", "kys@gmail.com"));
-        dao.insert(new Contact("jim", "64363468", "kys@gmail.com"));
-        dao.insert(new Contact("no", "64363468", "kys@gmail.com"));
+        dao.insert(new Contact("John", "9764373468", "John@gmail.com"));
+        dao.insert(new Contact("Jim", "946097235", "Jim@gmail.com"));
+        dao.insert(new Contact("Samantha", "4344363468", "Sam@gmail.com"));
     }
 
     public void loadFragment(Fragment frag, int container){
@@ -62,24 +64,19 @@ public class MainActivity extends AppCompatActivity {
         return true;
     }
 
+    @Override
+    public void onRequestPermissionsResult(int requestCode,
+                                           @NonNull String[] permissions,
+                                           @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == REQUEST_READ_CONTACT_PERMISSION){
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                Toast.makeText(this, "Contact Reading Permission Granted",
+                        Toast.LENGTH_SHORT).show();
+            }
+        }
+    }
 
-//    @Override
-//    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
-//        switch (item.getItemId()) {
-//
-//            case R.id.choose_contact:
-//                Toast.makeText(this, "1", Toast.LENGTH_SHORT).show();
-//                return true;
-//
-//            case R.id.all_contacts:
-//                Toast.makeText(this, "2", Toast.LENGTH_SHORT).show();
-//                return true;
-//
-//            default:
-//                return super.onOptionsItemSelected(item);
-//        }
-//    }
-
-    public ContactDOA getDao() { return dao; }
+    public ContactDOA getDao() { return this.dao; }
 
 }

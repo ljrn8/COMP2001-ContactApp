@@ -1,12 +1,14 @@
 package com.example.contactapp;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
 
+import androidx.activity.result.ActivityResultCallback;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
@@ -19,6 +21,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import android.provider.ContactsContract;
+import android.provider.Settings;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -53,18 +56,18 @@ public class ContactListFragment extends Fragment {
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         if (item.getItemId() == R.id.choose_contact) {
-            Intent intent = new Intent();
-            intent.setAction(Intent.ACTION_PICK);
-            intent.setData(ContactsContract.Contacts.CONTENT_URI);
-            pickContactLauncher.launch(intent);
+            if (requirePermissions()) {
+                Intent intent = new Intent();
+                intent.setAction(Intent.ACTION_PICK);
+                intent.setData(ContactsContract.Contacts.CONTENT_URI);
+                pickContactLauncher.launch(intent);
+            }
             return true;
 
         } else if (item.getItemId() == R.id.all_contacts) {
-
-            Intent intent = new Intent();
-            intent.setAction(Intent.ACTION_PICK); // TODO
-            intent.setData(ContactsContract.Contacts.CONTENT_URI);
-            allContactsLauncher.launch(intent);
+            if (requirePermissions()) {
+                importAllContacts((MainActivity) requireActivity());
+            }
             return true;
 
         } else if (item.getItemId() == R.id.delete_all) {
@@ -78,7 +81,7 @@ public class ContactListFragment extends Fragment {
             }
     }
 
-    private ActivityResultLauncher<Intent> pickContactLauncher, allContactsLauncher;
+    public ActivityResultLauncher<Intent> pickContactLauncher, allContactsLauncher;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -88,7 +91,6 @@ public class ContactListFragment extends Fragment {
 
         MainActivity activity = (MainActivity) requireActivity();
         setHasOptionsMenu(true);
-
 
         RecyclerView rv = view.findViewById(R.id.rv);
         rv.setLayoutManager(new LinearLayoutManager(requireContext()));
@@ -110,12 +112,20 @@ public class ContactListFragment extends Fragment {
                 new ActivityResultContracts.StartActivityForResult(),
                 result -> {
                     if (result.getResultCode() == Activity.RESULT_OK) {
+                        if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.READ_CONTACTS)
+                                != PackageManager.PERMISSION_GRANTED) {
+                            ActivityCompat.requestPermissions(requireActivity(),
+                                    new String[] { Manifest.permission.READ_CONTACTS }, 0);
+                        }
+
+
                         Intent data = result.getData();
                         if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.READ_CONTACTS)
                                 != PackageManager.PERMISSION_GRANTED) {
                             ActivityCompat.requestPermissions(requireActivity(),
                                     new String[] { Manifest.permission.READ_CONTACTS }, 0);
                         }
+
                         Contact newContact = processPickContact(data);
 
                         boolean duplicate = false;
@@ -143,59 +153,103 @@ public class ContactListFragment extends Fragment {
                 }
         );
 
-        // import all contacts
-        allContactsLauncher = registerForActivityResult(
-                new ActivityResultContracts.StartActivityForResult(),
-                result -> {
-                    if (result.getResultCode() == Activity.RESULT_OK) {
-                        Intent data = result.getData();
-                        if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.READ_CONTACTS)
-                                != PackageManager.PERMISSION_GRANTED) {
-                            ActivityCompat.requestPermissions(requireActivity(),
-                                    new String[] { Manifest.permission.READ_CONTACTS }, 0);
-                        }
-                        List<Contact> newContacts = processAllContacts(data);
-                        ContactDOA dao = activity.getDao();
 
-                        boolean duplicate = false;
-                        int numDuplicates = 0;
-
-                        Iterator<Contact> iterator = newContacts.iterator();
-                        while (iterator.hasNext()) {
-                            Contact newContact = iterator.next();
-                            for (Contact existingContact: dao.getAllContacts()) {
-                                if (Objects.equals(existingContact.getName(), newContact.getName())) {
-                                    numDuplicates++;
-                                    iterator.remove();
-                                    duplicate = true;
-                                    break;
-                                }
-                            }
-                        }
-
-
-                        if (duplicate) {
-                            Toast.makeText(requireContext(),
-                                    numDuplicates + " duplicate(s) where ignored, make sure names are unique",
-                                    Toast.LENGTH_LONG).show();
-                        }
-
-
-                        if (newContacts.size() > 0) {
-                            for (Contact contact: newContacts) {
-                                dao.insert(contact);
-                            }
-                            adapter.notifyDataSetChanged();
-                        }
-                    }
-                }
-        );
 
         return view;
     }
 
+    public final String t = "perms";
 
-    private List<Contact> processAllContacts(Intent data) {
+    private ActivityResultLauncher<String> requestPermissionLauncher =
+            registerForActivityResult(new ActivityResultContracts.RequestPermission(), isGranted -> {
+
+                if (!isGranted && !shouldShowRequestPermissionRationale(Manifest.permission.READ_CONTACTS)) {
+                        showPermissionExplanationDialog();
+
+                } else if (!isGranted) {
+                    Toast.makeText(getContext(), "contact permissions not granted", Toast.LENGTH_LONG).show();
+                }
+            });
+
+
+    private void showPermissionExplanationDialog() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(requireContext());
+        builder.setMessage("Contact Permissions for this app have been permanently denied, this happens when you deny it twice. To import contacts, allow contact permissions in settings")
+                .setPositiveButton("Open Settings", (dialog, which) -> {
+                    Intent intent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
+                    Uri uri = Uri.fromParts("package", requireActivity().getPackageName(), null);
+                    intent.setData(uri);
+                    startActivity(intent);
+                })
+                .setNegativeButton("Cancel", (dialog, which) -> dialog.dismiss())
+                .create()
+                .show();
+    }
+
+    private boolean requirePermissions() {
+        Log.i(t, "entered require permissions");
+
+        if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.READ_CONTACTS)
+                != PackageManager.PERMISSION_GRANTED) {
+
+            //ActivityCompat.requestPermissions(requireActivity(),
+            //        new String[] { Manifest.permission.READ_CONTACTS }, MainActivity.REQUEST_READ_CONTACT_PERMISSION);
+
+            Log.i(t, "about to start permission launcher ");
+            requestPermissionLauncher.launch(Manifest.permission.READ_CONTACTS);
+            Log.i(t, "done with permission launcher returning false");
+            return false;
+
+
+        } else {
+            Log.i(t, "permission apparently already granted returning true");
+            return true;
+        }
+    }
+
+
+
+
+
+    public void importAllContacts(MainActivity activity) {
+        if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.READ_CONTACTS)
+                != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(requireActivity(),
+                    new String[] { Manifest.permission.READ_CONTACTS }, 0);
+        }
+        List<Contact> newContacts = processAllContacts();
+        ContactDOA dao = activity.getDao();
+
+        boolean duplicate = false;
+        int numDuplicates = 0;
+
+        Iterator<Contact> iterator = newContacts.iterator();
+        while (iterator.hasNext()) {
+            Contact newContact = iterator.next();
+            for (Contact existingContact: dao.getAllContacts()) {
+                if (Objects.equals(existingContact.getName(), newContact.getName())) {
+                    numDuplicates++;
+                    iterator.remove();
+                    duplicate = true;
+                    break;
+                }
+            }
+        }
+        if (duplicate) {
+            Toast.makeText(requireContext(),
+                    numDuplicates + " duplicate(s) where ignored, make sure names are unique",
+                    Toast.LENGTH_LONG).show();
+        }
+        if (newContacts.size() > 0) {
+            for (Contact contact: newContacts) {
+                dao.insert(contact);
+            }
+            adapter.notifyDataSetChanged();
+        }
+    }
+
+
+    private List<Contact> processAllContacts() {
         List<Contact> importedContacts = new ArrayList<>();
         Uri contactsUri = ContactsContract.Contacts.CONTENT_URI;
 
@@ -212,7 +266,6 @@ public class ContactListFragment extends Fragment {
             do {
                 id = parentCursor.getInt(0);
                 String name = parentCursor.getString(1);
-
                 String email = getSelectedAddress(id);
                 String phone = getSelectedPhoneNumber(id);
                 importedContacts.add(new Contact(name, phone, email));

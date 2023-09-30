@@ -131,7 +131,7 @@ public class EditContactFragment extends Fragment {
             // get the pfp
             image = contact.getPicture();
             if (image != null) capture.setImageBitmap(image);
-            else { capture.setImageResource(R.drawable.ic_launcher_foreground); }
+            else { capture.setImageResource(R.drawable.baseline_person_24); }
 
             save.setOnClickListener(v -> {
                 if (validateInput(contacts)) {
@@ -149,7 +149,7 @@ public class EditContactFragment extends Fragment {
         // add a contact
         } else {
             toolbar.setTitle("Create Contact");
-            capture.setImageResource(R.drawable.ic_launcher_foreground);
+            capture.setImageResource(R.drawable.baseline_person_24);
             save.setOnClickListener(v -> {
                 if (validateInput(contacts)) {
                     Contact contact = new Contact(
@@ -212,12 +212,6 @@ public class EditContactFragment extends Fragment {
         }
         for (Contact contact: contacts) {
             if (contact.getName().equals(inName) && !contact.getName().equals(name)) {
-
-
-                Log.i("check", name);
-                Log.i("check", contact.getName());
-
-
                 Toast.makeText(requireContext(),
                         "name '" + contact.getName() + "' is taken",
                         Toast.LENGTH_LONG).show();
