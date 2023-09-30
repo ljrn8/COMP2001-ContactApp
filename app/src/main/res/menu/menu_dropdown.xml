@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <item android:id="@+id/choose_contact"
+        android:title="Import a contact"
+        app:showAsAction="never">
+
+    </item>
+
+    <item android:id="@+id/all_contacts"
+        android:title="Import all contacts"
+        app:showAsAction="never">
+
+    </item>
+
+    <item android:id="@+id/delete_all"
+        android:title="Delete all contacts"
+        app:showAsAction="never">
+
+    </item>
+</menu>

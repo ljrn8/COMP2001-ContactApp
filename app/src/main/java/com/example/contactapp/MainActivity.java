@@ -1,5 +1,6 @@
 package com.example.contactapp;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
@@ -7,6 +8,10 @@ import androidx.fragment.app.FragmentManager;
 
 import android.os.Bundle;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
+import android.widget.Toast;
 
 public class MainActivity extends AppCompatActivity {
     ContactListFragment contactListFragment = new ContactListFragment();
@@ -50,6 +55,30 @@ public class MainActivity extends AppCompatActivity {
             fm.beginTransaction().replace(container,frag).commit();
         }
     }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.menu_dropdown, menu);
+        return true;
+    }
+
+
+//    @Override
+//    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+//        switch (item.getItemId()) {
+//
+//            case R.id.choose_contact:
+//                Toast.makeText(this, "1", Toast.LENGTH_SHORT).show();
+//                return true;
+//
+//            case R.id.all_contacts:
+//                Toast.makeText(this, "2", Toast.LENGTH_SHORT).show();
+//                return true;
+//
+//            default:
+//                return super.onOptionsItemSelected(item);
+//        }
+//    }
 
     public ContactDOA getDao() { return dao; }
 

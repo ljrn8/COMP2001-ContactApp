@@ -33,7 +33,7 @@ public class ContactListAdapter extends RecyclerView.Adapter<ContactVH> {
 
         List<Contact> contacts = activity.getDao().getAllContacts();
 
-        Contact contact = contacts.get(position); // TODO get adapter pos
+        Contact contact = contacts.get(holder.getAdapterPosition()); // TODO get adapter pos
 
         holder.email.setText(contact.getEmail());
         holder.name.setText(contact.getName());
@@ -46,7 +46,7 @@ public class ContactListAdapter extends RecyclerView.Adapter<ContactVH> {
 
         holder.delete.setOnClickListener(v -> {
             activity.getDao().delete(contact);
-            notifyItemRemoved(position);
+            notifyItemRemoved(holder.getAdapterPosition());
         });
 
         contact.loadPicture(holder.pfp);

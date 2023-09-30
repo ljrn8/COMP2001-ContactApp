@@ -8,11 +8,13 @@ import android.os.Bundle;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.fragment.app.Fragment;
 
+import android.provider.ContactsContract;
 import android.provider.MediaStore;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -35,10 +37,10 @@ public class EditContactFragment extends Fragment {
     private boolean createContact;
     private long id;
 
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        Log.i("kys", "reran onCreate");
         Bundle arguments = getArguments();
         if (arguments != null) {
             name = arguments.getString("name");
@@ -72,6 +74,10 @@ public class EditContactFragment extends Fragment {
         if (item.getItemId() == android.R.id.home) {
             ((MainActivity) requireActivity()).loadFragment(new ContactListFragment(), R.id.contact_list);
             return true;
+
+        } else if (item.getItemId() == R.id.choose_contact
+                || item.getItemId() == R.id.all_contacts ) {
+            Toast.makeText(requireContext(), "return to the contact list before importing", Toast.LENGTH_LONG).show();
         }
         return super.onOptionsItemSelected(item);
     }
@@ -103,15 +109,13 @@ public class EditContactFragment extends Fragment {
 
         capture = view.findViewById(R.id.capture);
 
-
+        // menu toolbar
         Toolbar toolbar = view.findViewById(R.id.toolbar);
         MainActivity activity = (MainActivity) getActivity();
-        if (activity != null) {
-            activity.setSupportActionBar(toolbar);
-            ActionBar actionBar = activity.getSupportActionBar();
-            if (actionBar != null) {
-                actionBar.setDisplayHomeAsUpEnabled(true);
-            }
+        activity.setSupportActionBar(toolbar);
+        ActionBar actionBar = activity.getSupportActionBar();
+        if (actionBar != null) {
+            actionBar.setDisplayHomeAsUpEnabled(true);
         }
 
 

@@ -3,13 +3,25 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     tools:context=".ContactListFragment">
 
     <!-- TODO: Update blank fragment layout -->
 
+
     <RelativeLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="wrap_content">
+
+        <androidx.appcompat.widget.Toolbar
+            android:id="@+id/tool"
+            android:theme="@style/ThemeOverlay.AppCompat"
+            android:layout_width="match_parent"
+            android:layout_height="?attr/actionBarSize"
+            app:title="Contact App"
+            >
+
+        </androidx.appcompat.widget.Toolbar>
 
         <LinearLayout
             android:id="@+id/buttons"
@@ -29,19 +41,13 @@
                 android:text="+ add contact"
                 android:textSize="20dp" />
 
-            <Button
-                android:id="@+id/import_contacts"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:textSize="20dp"
-                android:layout_marginLeft="10dp"
-                android:text="import" />
         </LinearLayout>
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/rv"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/tool"
             android:layout_above="@id/buttons">
 
         </androidx.recyclerview.widget.RecyclerView>

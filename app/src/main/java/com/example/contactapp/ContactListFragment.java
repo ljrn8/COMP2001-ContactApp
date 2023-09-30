@@ -1,7 +1,6 @@
 package com.example.contactapp;
 
 import android.app.Activity;
-import android.content.ContentResolver;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
@@ -10,6 +9,9 @@ import android.os.Bundle;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.ActionBar;
+import androidx.appcompat.widget.Toolbar;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
@@ -19,6 +21,9 @@ import androidx.recyclerview.widget.RecyclerView;
 import android.provider.ContactsContract;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
@@ -26,6 +31,9 @@ import android.Manifest;
 import android.widget.Toast;
 
 
+import java.sql.Array;
+import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
 
@@ -38,12 +46,48 @@ public class ContactListFragment extends Fragment {
     public ContactListAdapter adapter;
 
     @Override
+    public void onCreateOptionsMenu(@NonNull Menu menu, @NonNull MenuInflater inflater) {
+        super.onCreateOptionsMenu(menu, inflater);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+        if (item.getItemId() == R.id.choose_contact) {
+            Intent intent = new Intent();
+            intent.setAction(Intent.ACTION_PICK);
+            intent.setData(ContactsContract.Contacts.CONTENT_URI);
+            pickContactLauncher.launch(intent);
+            return true;
+
+        } else if (item.getItemId() == R.id.all_contacts) {
+
+            Intent intent = new Intent();
+            intent.setAction(Intent.ACTION_PICK); // TODO
+            intent.setData(ContactsContract.Contacts.CONTENT_URI);
+            allContactsLauncher.launch(intent);
+            return true;
+
+        } else if (item.getItemId() == R.id.delete_all) {
+            ContactDOA dao = ((MainActivity) requireActivity()).getDao();
+            dao.deleteAll();
+            adapter.notifyDataSetChanged();
+            return true;
+
+        } else {
+                return super.onOptionsItemSelected(item);
+            }
+    }
+
+    private ActivityResultLauncher<Intent> pickContactLauncher, allContactsLauncher;
+
+    @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.fragment_contact_list, container, false);
 
         MainActivity activity = (MainActivity) requireActivity();
+        setHasOptionsMenu(true);
 
 
         RecyclerView rv = view.findViewById(R.id.rv);
@@ -51,19 +95,28 @@ public class ContactListFragment extends Fragment {
         adapter = new ContactListAdapter(activity);
         rv.setAdapter(adapter);
 
+        // menu toolbar
+        Toolbar toolbar = view.findViewById(R.id.tool);
+        activity.setSupportActionBar(toolbar);
+        ActionBar actionBar = activity.getSupportActionBar();
 
         Button addContact = view.findViewById(R.id.addContact);
         addContact.setOnClickListener(v -> ((MainActivity) requireActivity()).loadFragment(
                 new EditContactFragment(), R.id.contact_list)
         );
 
-
-        ActivityResultLauncher<Intent> pickContactLauncher = registerForActivityResult(
+        // handle picking 1 contact
+        pickContactLauncher = registerForActivityResult(
                 new ActivityResultContracts.StartActivityForResult(),
                 result -> {
                     if (result.getResultCode() == Activity.RESULT_OK) {
                         Intent data = result.getData();
-                        Contact newContact = processPickContactResult(data);
+                        if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.READ_CONTACTS)
+                                != PackageManager.PERMISSION_GRANTED) {
+                            ActivityCompat.requestPermissions(requireActivity(),
+                                    new String[] { Manifest.permission.READ_CONTACTS }, 0);
+                        }
+                        Contact newContact = processPickContact(data);
 
                         boolean duplicate = false;
                         ContactDOA dao = activity.getDao();
@@ -73,6 +126,7 @@ public class ContactListFragment extends Fragment {
                                 Toast.makeText(requireContext(),
                                         "Imported contact has same name as existing contact " + contact.getName(),
                                         Toast.LENGTH_LONG).show();
+
                                 duplicate = true;
                             }
                         }
@@ -89,25 +143,89 @@ public class ContactListFragment extends Fragment {
                 }
         );
 
-        Button importContacts = view.findViewById(R.id.import_contacts);
-        importContacts.setOnClickListener(v -> {
-            Intent intent = new Intent();
-            intent.setAction(Intent.ACTION_PICK);
-            intent.setData(ContactsContract.Contacts.CONTENT_URI);
-            pickContactLauncher.launch(intent);
-        });
+        // import all contacts
+        allContactsLauncher = registerForActivityResult(
+                new ActivityResultContracts.StartActivityForResult(),
+                result -> {
+                    if (result.getResultCode() == Activity.RESULT_OK) {
+                        Intent data = result.getData();
+                        if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.READ_CONTACTS)
+                                != PackageManager.PERMISSION_GRANTED) {
+                            ActivityCompat.requestPermissions(requireActivity(),
+                                    new String[] { Manifest.permission.READ_CONTACTS }, 0);
+                        }
+                        List<Contact> newContacts = processAllContacts(data);
+                        ContactDOA dao = activity.getDao();
+
+                        boolean duplicate = false;
+                        int numDuplicates = 0;
+
+                        Iterator<Contact> iterator = newContacts.iterator();
+                        while (iterator.hasNext()) {
+                            Contact newContact = iterator.next();
+                            for (Contact existingContact: dao.getAllContacts()) {
+                                if (Objects.equals(existingContact.getName(), newContact.getName())) {
+                                    numDuplicates++;
+                                    iterator.remove();
+                                    duplicate = true;
+                                    break;
+                                }
+                            }
+                        }
+
+
+                        if (duplicate) {
+                            Toast.makeText(requireContext(),
+                                    numDuplicates + " duplicate(s) where ignored, make sure names are unique",
+                                    Toast.LENGTH_LONG).show();
+                        }
+
+
+                        if (newContacts.size() > 0) {
+                            for (Contact contact: newContacts) {
+                                dao.insert(contact);
+                            }
+                            adapter.notifyDataSetChanged();
+                        }
+                    }
+                }
+        );
 
         return view;
     }
 
 
-    private Contact processPickContactResult(Intent data) {
-        String tag = "importing";
-        if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.READ_CONTACTS)
-                != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(requireActivity(),
-                    new String[] { Manifest.permission.READ_CONTACTS }, 0);
+    private List<Contact> processAllContacts(Intent data) {
+        List<Contact> importedContacts = new ArrayList<>();
+        Uri contactsUri = ContactsContract.Contacts.CONTENT_URI;
+
+        String[] queryFields = new String[] {
+                ContactsContract.Contacts._ID,
+                ContactsContract.Contacts.DISPLAY_NAME,
+        };
+
+        int id = 0;
+        Cursor parentCursor = requireActivity().getContentResolver().query(
+                contactsUri, queryFields, null, null, null
+        );
+        if (parentCursor.moveToFirst()) {
+            do {
+                id = parentCursor.getInt(0);
+                String name = parentCursor.getString(1);
+
+                String email = getSelectedAddress(id);
+                String phone = getSelectedPhoneNumber(id);
+                importedContacts.add(new Contact(name, phone, email));
+
+            } while (parentCursor.moveToNext());
         }
+        parentCursor.close();
+        return importedContacts;
+    }
+
+
+    private Contact processPickContact(Intent data) {
+        String tag = "importing";
 
         Uri contactUri = data.getData();
         String[] queryFields = new String[] {
@@ -136,7 +254,6 @@ public class ContactListFragment extends Fragment {
                 String email = getSelectedAddress(id);
                 String phone = getSelectedPhoneNumber(id);
                 newContact = new Contact(name, phone, email);
-
             }
         } finally {
             c.close();
@@ -181,9 +298,7 @@ public class ContactListFragment extends Fragment {
             } while(c.moveToNext());
 
         } finally {
-            if (c != null) {
-                c.close();
-            }
+            c.close();
         }
         return address;
     }
